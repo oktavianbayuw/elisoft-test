@@ -89,6 +89,8 @@ class SettingUsersController extends Controller
     public function edit($id)
     {
         //
+        $data = User::where('id', $id)->first();
+        return view('user.edit', compact('data'));
     }
 
     /**
@@ -101,6 +103,31 @@ class SettingUsersController extends Controller
     public function update(Request $request, $id)
     {
         //
+        $this->validation($request);
+        $dataUpdate = [
+            'name'  => $request->name,
+            'email' => $request->email
+        ];
+
+        if($request->password) {
+            $dataUpdate['password'] = Hash::make($request->password);
+        }
+        $dataSave = User::where('id', $id)->update($dataUpdate);
+
+        $message = '';
+        $alert = '';
+        if($dataSave) {
+            $message = 'Data Berhasil Ditambahkan';
+            $alert = 'success';
+        } else {
+            $message = 'Data Gagal Ditambahkan';
+            $alert  = 'danger';
+        }
+
+        return redirect()->route('user.index')->with([
+            'message' => $message,
+            'alert'   => $alert
+        ]);
     }
 
     /**
@@ -112,22 +139,37 @@ class SettingUsersController extends Controller
     public function destroy($id)
     {
         //
+        $data = User::where('id', $id)->delete();
+        if($data) {
+            return response()->json([
+                'success'   => 'Data Berhasil Dihapus'
+            ]);
+        } else {
+            return response()->json([
+                'errors' => 'Data Gagal Dihapus'
+            ]);
+        }
     }
 
     private function validation(Request $request) {
-        $rules = [
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password'  => 'required|min:8'
-        ];
+        $rules = [];
+        if($request->isMethod('PUT')) {
+            $rules[] = [
+                'name'  => 'required|string|max:255',
+                'email' => 'required|email|unique:users,'.$request->id
+            ];
 
-        // if(in_array($this->method(), ['PUT', 'PATCH'])) {
-        //     $rules['email'] = ['required', 'email', 'unique:users,email,'.$request->id];
+            if($request->password) {
+                $rules['password'] = ['min:8'];
+            }
 
-        //     if($request->password) {
-        //         $rules['password'] = ['min:8'];
-        //     }
-        // }
+        } else if($request->isMethod('POST')) {
+            $rules[] = [
+                'name'  => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'password'  => 'required|min:8'
+            ];
+        }
 
         $messages = [
             'required' => ':attribute Harus Diisi',

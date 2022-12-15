@@ -86,17 +86,17 @@
                             </i>
                             View
                         </a>
-                        <a class="btn btn-info btn-sm" href="#">
+                        <a class="btn btn-info btn-sm" href="{{ route('user.edit', $item->id) }}">
                             <i class="fas fa-pencil-alt">
                             </i>
                             Edit
                         </a>
                         @if ($item->id != Auth::user()->id)
-                        <a class="btn btn-danger btn-sm" href="#">
+                        <button data-id="{{ $item->id }}" href="{{ route('user.destroy', $item->id) }}" data-name="{{ $item->name }}" style="color: white;" type="button" class="btn btn-danger btn-sm btn-delete">
                           <i class="fas fa-trash">
                           </i>
                           Delete
-                        </a>
+                        </button>
                         @endif
                         
                     </td>
@@ -154,6 +154,32 @@
         $('.user-email').val(data.data.email);
         $('.user-createdAt').val(data.data.createdAt);
       });
+    });
+
+    $('.btn-delete').click(function(e) {
+      const name = $(this).attr('data-name');
+      const url = $(this).attr('href');
+      const id_delete = $(this).data('id');
+      if(confirm(`Hapus Data ${name}`) == true) {
+          $.ajaxSetup({
+              headers: {
+                  'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+              }
+          });
+          $.ajax({
+              type: "DELETE",
+              url: url,
+              data: {id : id_delete },
+              success: function(data) {
+                  if(data.errors) {
+                      alert(`${data.errors}`);
+                  } else {
+                      alert(`${data.success}`);
+                      window.location.reload();
+                  }
+              }
+          });
+      }
     });
   </script>
 @endsection
