@@ -6,13 +6,20 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Requests\UserFormRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class SettingUserController extends Controller
 {
     //
     public function index() {
-        $data = User::paginate(10);
-        return view('user.index', compact('data'));
+        $data = Http::get('http://107.172.204.17/jubelio/api/all/products/stock', [
+            'email'     => 'blrsit21@gmail.com',
+            'page'      => 1,
+            'pageSize'  => 1
+        ]);
+        return response()->json([
+            'data'  => $data
+        ]);
     }
 
     public function create() {
